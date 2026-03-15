@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ubik Consiglia — Quale libro ti sta cercando?</title>
+<meta name="description" content="Rispondi a 12 domande e scopri il tuo prossimo libro. Un consiglio dalla tua libreria Ubik Asolo.">
+<meta property="og:title" content="Quale libro ti sta cercando?">
+<meta property="og:description" content="12 domande per scoprire la tua prossima lettura. Un consiglio dalla tua libreria Ubik Asolo.">
+<meta property="og:type" content="website">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: Verdana, Geneva, sans-serif;
+    background: #FFF;
+    color: #1A1A1A;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+  }
+  #app { width: 100%; max-width: 540px; }
+
+  .header { text-align: center; margin-bottom: 48px; transition: margin 0.3s ease; }
+  .header.compact { margin-bottom: 24px; }
+  .header-line { display: inline-flex; align-items: center; gap: 12px; }
+  .header-bar { width: 32px; height: 4px; background: #E30613; }
+  .header-label {
+    font-size: 11px; font-weight: bold; letter-spacing: 4px;
+    text-transform: uppercase; color: #E30613;
+  }
+
+  .fade { transition: opacity 0.3s ease, transform 0.3s ease; }
+  .fade-in { opacity: 1; transform: translateY(0); }
+  .fade-out { opacity: 0; transform: translateY(8px); }
+
+  /* WELCOME */
+  .welcome { text-align: center; }
+  .welcome h1 {
+    font-size: clamp(24px, 6vw, 34px); font-weight: bold;
+    line-height: 1.25; margin-bottom: 16px;
+  }
+  .welcome p {
+    font-size: 13px; line-height: 1.7; color: #666;
+    max-width: 380px; margin: 0 auto 40px;
+  }
+  .btn-start {
+    background: #E30613; color: #FFF; border: none;
+    padding: 16px 48px; font-size: 12px;
+    font-family: Verdana, Geneva, sans-serif;
+    font-weight: bold; letter-spacing: 2px;
+    text-transform: uppercase; cursor: pointer;
+    transition: background 0.2s; -webkit-appearance: none;
+  }
+  .btn-start:active { background: #C70510; }
+
+  /* PROGRESS */
+  .progress-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+  }
+  .progress-track {
+    flex: 1; height: 2px; background: #E5E5E5; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: #E30613; transition: width 0.5s ease;
+  }
+  .progress-count {
+    font-size: 11px; color: #999; font-weight: bold; white-space: nowrap;
+  }
+
+  /* QUESTION */
+  .question-title {
+    font-size: clamp(17px, 4.5vw, 22px); font-weight: bold;
+    line-height: 1.45; margin-bottom: 24px;
+  }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option-btn {
+    background: #FFF; border: 1.5px solid #E5E5E5;
+    padding: 15px 16px; font-size: 13px;
+    font-family: Verdana, Geneva, sans-serif;
+    cursor: pointer; text-align: left;
+    display: flex; align-items: center; gap: 12px;
+    transition: all 0.2s; -webkit-appearance: none;
+    color: #1A1A1A; line-height: 1.4;
+  }
+  .option-btn:active:not(.disabled) { background: #FDE8E9; border-color: #E30613; }
+  .option-btn.selected {
+    background: #FDE8E9; border: 2px solid #E30613; padding: 14px 15px;
+  }
+  .option-btn.dimmed { opacity: 0.3; }
+  .option-btn.disabled { cursor: default; }
+  .option-circle {
+    width: 24px; height: 24px; border: 1.5px solid #E5E5E5;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+    font-size: 10px; font-weight: bold; color: #999;
+    transition: all 0.2s;
+  }
+  .option-btn.selected .option-circle {
+    border-color: #E30613; color: #E30613; background: #FFF;
+  }
+
+  /* RESULT */
+  .result { text-align: center; }
+  .result-tag {
+    font-size: 10px; font-weight: bold; letter-spacing: 3px;
+    text-transform: uppercase; color: #E30613; margin-bottom: 28px;
+  }
+  .result-card {
+    border: 2px solid #E30613; padding: 36px 24px;
+    margin-bottom: 20px; position: relative;
+  }
+  .corner-tl, .corner-br {
+    position: absolute; width: 24px; height: 24px; background: #FFF;
+  }
+  .corner-tl {
+    top: 0; left: 0; border-right: 2px solid #E30613;
+    border-bottom: 2px solid #E30613; transform: translate(-2px,-2px);
+  }
+  .corner-br {
+    bottom: 0; right: 0; border-left: 2px solid #E30613;
+    border-top: 2px solid #E30613; transform: translate(2px,2px);
+  }
+  .result-title {
+    font-size: clamp(22px, 5.5vw, 30px); font-weight: bold;
+    line-height: 1.2; margin-bottom: 4px;
+  }
+  .result-author {
+    font-size: 13px; color: #E30613; font-weight: bold;
+    margin-bottom: 24px; letter-spacing: 0.5px;
+  }
+  .result-divider {
+    width: 32px; height: 2px; background: #E30613;
+    margin: 0 auto 24px;
+  }
+  .result-reason {
+    font-size: 13px; line-height: 1.8; color: #666;
+    font-style: italic; max-width: 400px; margin: 0 auto;
+  }
+
+  .runner-up {
+    background: #FAFAFA; border: 1px solid #E5E5E5;
+    padding: 16px 20px; margin-bottom: 28px;
+    display: flex; align-items: center; gap: 16px;
+    text-align: left;
+  }
+  .runner-label {
+    font-size: 9px; font-weight: bold; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #999;
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    white-space: nowrap;
+  }
+  .runner-title { font-size: 15px; font-weight: bold; }
+  .runner-author { font-size: 12px; color: #999; margin-left: 8px; }
+
+  .btn-restart {
+    background: #FFF; color: #E30613;
+    border: 2px solid #E30613;
+    padding: 14px 36px; font-size: 11px;
+    font-family: Verdana, Geneva, sans-serif;
+    font-weight: bold; letter-spacing: 2px;
+    text-transform: uppercase; cursor: pointer;
+    transition: all 0.2s; -webkit-appearance: none;
+    margin-bottom: 12px;
+  }
+  .btn-restart:active { background: #E30613; color: #FFF; }
+
+  .btn-share {
+    background: #25D366; color: #FFF; border: none;
+    padding: 14px 36px; font-size: 11px;
+    font-family: Verdana, Geneva, sans-serif;
+    font-weight: bold; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer;
+    transition: background 0.2s; -webkit-appearance: none;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-share:active { background: #1DA851; }
+
+  .footer {
+    text-align: center; margin-top: 56px; padding-top: 20px;
+    border-top: 1px solid #E5E5E5;
+    font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase; color: #999;
+  }
+
+  @media (hover: hover) {
+    .option-btn:hover:not(.disabled):not(.selected):not(.dimmed) {
+      border-color: #E30613; background: #FDE8E9;
+    }
+    .btn-start:hover { background: #C70510; }
+    .btn-restart:hover { background: #E30613; color: #FFF; }
+    .btn-share:hover { background: #1DA851; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header" id="header">
+    <div class="header-line">
+      <div class="header-bar"></div>
+      <span class="header-label">ubik asolo consiglia</span>
+      <div class="header-bar"></div>
+    </div>
+  </div>
+  <div class="fade fade-in" id="content"></div>
+  <div class="footer">Un consiglio dalla tua libreria Ubik Asolo</div>
+</div>
+
+<script>
+const BOOKS = {
+  diabolici: { title: "I diabolici", author: "Boileau-Narcejac", reason: "Ami il brivido dell'inganno: questo thriller psicologico è un meccanismo perfetto dove nulla è come sembra." },
+  vinpeel: { title: "Vinpeel degli orizzonti", author: "Peppe Millanta", reason: "Hai lo sguardo di un sognatore: questo romanzo poetico e visionario ti porterà oltre ogni orizzonte conosciuto." },
+  fiori: { title: "Fiori per Algernon", author: "Daniel Keyes", reason: "Cerchi storie che toccano il cuore e la mente: il viaggio di Charlie ti commuoverà e ti farà riflettere sull'essenza dell'umanità." },
+  portnoy: { title: "Lamento di Portnoy", author: "Philip Roth", reason: "Ti piace ridere anche quando fa male: la confessione sfrenata di Portnoy è un capolavoro di ironia feroce e verità scomode." },
+  lolita: { title: "Lolita", author: "Vladimir Nabokov", reason: "Ami la prosa come arte: Nabokov ti sedurrà con una scrittura ipnotica che trasforma anche l'orrore in bellezza letteraria." },
+  felici: { title: "Felici i felici", author: "Yasmina Reza", reason: "Ti affascinano le dinamiche umane: Reza seziona con bisturi e ironia le relazioni, mostrando quanto siamo tutti magnificamente imperfetti." },
+  gulliver: { title: "I viaggi di Gulliver", author: "Jonathan Swift", reason: "Hai spirito avventuroso e occhio critico: Swift ti farà viaggiare in mondi assurdi per mostrarti le assurdità del nostro." },
+  stupidi: { title: "I miei stupidi intenti", author: "Bernardo Zannoni", reason: "Ti parla la natura e cerchi il senso delle cose: questa favola esistenziale con animali filosofi ti stupirà per profondità e originalità." },
+  bomba: { title: "Bomba Atomica", author: "Roberto Mercadini", reason: "Ami imparare attraverso le storie: Mercadini trasforma la scienza e la storia in un racconto avvincente che cambia il tuo sguardo sul mondo." }
+};
+
+const QS = [
+  { q: "Cosa cerchi prima di tutto in un libro?", opts: [
+    { t: "Suspense e colpi di scena", s: { diabolici:3, lolita:1 }},
+    { t: "Poesia e senso di meraviglia", s: { vinpeel:3, fiori:1 }},
+    { t: "Ironia, anche feroce", s: { portnoy:2, gulliver:2 }},
+    { t: "Idee nuove e conoscenza", s: { bomba:3, stupidi:1 }}
+  ]},
+  { q: "Quale atmosfera ti attira di più?", opts: [
+    { t: "Cupa e inquietante", s: { diabolici:3, lolita:2 }},
+    { t: "Luminosa e sognante", s: { vinpeel:3, fiori:1 }},
+    { t: "Ironica e tagliente", s: { portnoy:2, felici:2, gulliver:1 }},
+    { t: "Intima e contemplativa", s: { stupidi:3, bomba:1 }}
+  ]},
+  { q: "Che tipo di protagonista ti conquista?", opts: [
+    { t: "Ambiguo e sfuggente, di cui non ti fidi", s: { diabolici:2, lolita:3 }},
+    { t: "Un sognatore fuori dal comune", s: { vinpeel:3, fiori:2 }},
+    { t: "Un nevrotico irresistibile", s: { portnoy:3, felici:2 }},
+    { t: "Un osservatore curioso del mondo", s: { gulliver:2, bomba:2, stupidi:1 }}
+  ]},
+  { q: "Se il libro fosse un viaggio, dove vorresti andare?", opts: [
+    { t: "In un labirinto psicologico senza uscita", s: { diabolici:3, lolita:2 }},
+    { t: "In un mondo fantastico da esplorare", s: { vinpeel:2, gulliver:3 }},
+    { t: "Dentro la mente di qualcuno", s: { fiori:3, portnoy:2 }},
+    { t: "Attraverso la storia e le grandi scoperte", s: { bomba:3, stupidi:1 }}
+  ]},
+  { q: "Come ti piace la scrittura?", opts: [
+    { t: "Elegante, cesellata, ogni parola al suo posto", s: { lolita:3, felici:2 }},
+    { t: "Visionaria e poetica", s: { vinpeel:3, fiori:1 }},
+    { t: "Diretta, senza filtri, viscerale", s: { portnoy:3, diabolici:1 }},
+    { t: "Brillante e capace di spiegare l'impossibile", s: { bomba:3, gulliver:1, stupidi:1 }}
+  ]},
+  { q: "Quale emozione vuoi provare leggendo?", opts: [
+    { t: "Inquietudine che non ti lascia dormire", s: { diabolici:3, lolita:1 }},
+    { t: "Stupore, come un bambino che scopre il mondo", s: { vinpeel:2, bomba:2 }},
+    { t: "Commozione profonda", s: { fiori:3, stupidi:2 }},
+    { t: "Divertimento amaro, ridere con un nodo in gola", s: { portnoy:2, felici:2, gulliver:1 }}
+  ]},
+  { q: "Quale tema ti interessa di più?", opts: [
+    { t: "L'inganno, la manipolazione, le maschere", s: { diabolici:3, lolita:2 }},
+    { t: "Il rapporto tra uomo e natura", s: { stupidi:3, vinpeel:1 }},
+    { t: "L'identità e i limiti della mente umana", s: { fiori:3, portnoy:2 }},
+    { t: "La società e le sue magnifiche assurdità", s: { gulliver:3, felici:2, bomba:1 }}
+  ]},
+  { q: "Un libro ideale per te è…", opts: [
+    { t: "Un meccanismo perfetto dove ogni pezzo si incastra", s: { diabolici:3, lolita:1 }},
+    { t: "Un sogno a occhi aperti", s: { vinpeel:3, gulliver:1 }},
+    { t: "Uno specchio spietato in cui riconoscerti", s: { portnoy:3, felici:2 }},
+    { t: "Un viaggio di crescita e trasformazione", s: { fiori:2, stupidi:2, bomba:2 }}
+  ]},
+  { q: "Come preferisci il ritmo narrativo?", opts: [
+    { t: "Serrato: non riesci a smettere di leggere", s: { diabolici:3, bomba:1 }},
+    { t: "Lento e ipnotico, che ti culla", s: { lolita:3, vinpeel:2 }},
+    { t: "Altalenante: dal riso alle lacrime", s: { portnoy:2, fiori:2, felici:1 }},
+    { t: "Cadenzato, come un racconto attorno al fuoco", s: { bomba:2, gulliver:2, stupidi:2 }}
+  ]},
+  { q: "Se fossi un animale lettore, saresti…", opts: [
+    { t: "Un gatto che osserva dall'ombra", s: { diabolici:2, lolita:2 }},
+    { t: "Un uccello che vola tra i sogni", s: { vinpeel:3, fiori:1 }},
+    { t: "Una volpe furba e filosofa", s: { stupidi:3, gulliver:2 }},
+    { t: "Un cane che scava fino all'osso", s: { portnoy:2, bomba:2, felici:1 }}
+  ]},
+  { q: "Cosa pensi dei finali?", opts: [
+    { t: "Devono lasciarmi senza fiato", s: { diabolici:3 }},
+    { t: "Devono farmi sognare ancora", s: { vinpeel:2, gulliver:2 }},
+    { t: "Devono farmi riflettere per giorni", s: { fiori:2, lolita:2, stupidi:2 }},
+    { t: "Devono essere onesti, anche se amari", s: { portnoy:2, felici:2, bomba:1 }}
+  ]},
+  { q: "L'ultimo ingrediente: cosa rende un libro indimenticabile?", opts: [
+    { t: "Una trama che ti inganna fino all'ultima pagina", s: { diabolici:3, lolita:1 }},
+    { t: "Un mondo tutto da scoprire, mai visto prima", s: { vinpeel:2, gulliver:2, stupidi:2 }},
+    { t: "Personaggi così veri da sembrare persone che conosci", s: { portnoy:2, fiori:2, felici:2 }},
+    { t: "Idee che ti cambiano il modo di guardare le cose", s: { bomba:3, lolita:1, fiori:1 }}
+  ]}
+];
+
+let currentQ = -1, answers = [], locked = false;
+const $ = id => document.getElementById(id);
+const content = $('content');
+const header = $('header');
+
+function fadeOut(cb) {
+  content.classList.remove('fade-in');
+  content.classList.add('fade-out');
+  setTimeout(cb, 300);
+}
+function fadeIn() {
+  content.classList.remove('fade-out');
+  content.classList.add('fade-in');
+}
+
+function showWelcome() {
+  header.classList.remove('compact');
+  content.innerHTML = `
+    <div class="welcome">
+      <h1>Quale libro<br>ti sta cercando?</h1>
+      <p>12 domande per scoprire la tua prossima lettura.<br>Non pensarci troppo — il tuo istinto sa già la risposta.</p>
+      <button class="btn-start" onclick="startQuiz()">Inizia</button>
+    </div>`;
+  fadeIn();
+}
+
+function startQuiz() {
+  fadeOut(() => { currentQ = 0; answers = []; locked = false; showQuestion(); });
+}
+
+function showQuestion() {
+  header.classList.add('compact');
+  const q = QS[currentQ];
+  const pct = ((currentQ + 1) / QS.length * 100).toFixed(0);
+  const letters = ['A','B','C','D'];
+  content.innerHTML = `
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <span class="progress-count">${currentQ+1}/${QS.length}</span>
+    </div>
+    <h2 class="question-title">${q.q}</h2>
+    <div class="options">
+      ${q.opts.map((o,i) => `
+        <button class="option-btn" data-idx="${i}" onclick="pick(${i})">
+          <span class="option-circle">${letters[i]}</span>
+          <span>${o.t}</span>
+        </button>`).join('')}
+    </div>`;
+  fadeIn();
+}
+
+function pick(idx) {
+  if (locked) return;
+  locked = true;
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((b,i) => {
+    b.classList.add('disabled');
+    if (i === idx) {
+      b.classList.add('selected');
+      b.querySelector('.option-circle').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E30613" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    } else {
+      b.classList.add('dimmed');
+    }
+  });
+  answers.push(QS[currentQ].opts[idx].s);
+  setTimeout(() => {
+    fadeOut(() => {
+      currentQ++;
+      locked = false;
+      if (currentQ < QS.length) showQuestion();
+      else showResult();
+    });
+  }, 400);
+}
+
+function showResult() {
+  header.classList.add('compact');
+  const scores = {};
+  Object.keys(BOOKS).forEach(k => scores[k] = 0);
+  answers.forEach(a => Object.entries(a).forEach(([k,v]) => scores[k] = (scores[k]||0) + v));
+  const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  const book = BOOKS[sorted[0][0]];
+  const runner = sorted.length > 1 ? BOOKS[sorted[1][0]] : null;
+  const showRunner = runner && runner.title !== book.title;
+
+  let html = `
+    <div class="result">
+      <div class="result-tag">Il tuo prossimo libro</div>
+      <div class="result-card">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+        <h2 class="result-title">${book.title}</h2>
+        <p class="result-author">${book.author}</p>
+        <div class="result-divider"></div>
+        <p class="result-reason">${book.reason}</p>
+      </div>`;
+
+  if (showRunner) {
+    html += `
+      <div class="runner-up">
+        <div class="runner-label">Anche</div>
+        <div>
+          <span class="runner-title">${runner.title}</span>
+          <span class="runner-author">${runner.author}</span>
+        </div>
+      </div>`;
+  }
+
+  const shareText = encodeURIComponent(`Ho fatto il quiz "Quale libro ti sta cercando?" della libreria Ubik Asolo e il mio risultato è: *${book.title}* di ${book.author}! 📚\n\nProvalo anche tu 👇`);
+
+  html += `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
+        <button class="btn-share" onclick="window.open('https://wa.me/?text=${shareText}','_blank')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFF"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Condividi su WhatsApp
+        </button>
+        <button class="btn-restart" onclick="restart()">Ricomincia</button>
+      </div>
+    </div>`;
+
+  content.innerHTML = html;
+  fadeIn();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  fadeOut(() => { currentQ = -1; answers = []; locked = false; showWelcome(); });
+}
+
+showWelcome();
+</script>
+</body>
+</html>
